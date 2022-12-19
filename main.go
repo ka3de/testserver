@@ -18,6 +18,9 @@ type application struct {
 		username string
 		password string
 	}
+
+	counterMu *sync.Mutex
+	counter   int
 }
 
 var upgrader = websocket.Upgrader{
@@ -30,6 +33,7 @@ func main() {
 
 	app.auth.username = os.Getenv("AUTH_USERNAME")
 	app.auth.password = os.Getenv("AUTH_PASSWORD")
+	app.counterMu = &sync.Mutex{}
 
 	if app.auth.username == "" {
 		log.Fatal("basic auth username must be provided")
@@ -46,6 +50,13 @@ func main() {
 	mux.HandleFunc("/protected", app.basicAuth(app.protectedHandler))
 	mux.HandleFunc("/slow", app.slowHandler)
 	mux.HandleFunc("/ws/echo", app.wsEchoHandler)
+	mux.HandleFunc("/embed-youtube", app.embedYoutubeHandler)
+	mux.HandleFunc("/ping-main-html", app.pingMainHtmlHandler)
+	mux.HandleFunc("/ping", app.pingHandler)
+	mux.HandleFunc("/ping-html", app.pingHtmlHandler)
+	mux.HandleFunc("/ping.js", app.pingJSHandler)
+	mux.HandleFunc("/textbox", app.textBoxHandler)
+	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
 
 	srv := &http.Server{
 		Addr:         ":8080",
@@ -87,6 +98,10 @@ func main() {
 }
 
 func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	v := r.Header[http.CanonicalHeaderKey("x-authenticated-user")]
 	if v != nil {
 		fmt.Printf("x-authenticated-user header present in call to index: %s\n", v)
@@ -117,23 +132,37 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
 <td><a href="/slow">/slow</a></td>
 <td>You'll get a response back after 200ms</td>
 </tr>
+<tr>
+<td><a href="/dialogbox">/dialog box</a></td>
+<td>A page with a dialog box</td>
+</tr>
 </table>
 
 <br />
+<div id="prolongNetworkIdleLoad">Waiting...</div>
+
+<br />
 <h1>Websocket Test</h1>
+<img src="/balh.png"></img>
 
 <!-- websockets.html -->
 <input id="input" type="text" />
 <button onclick="send()">Send</button>
 <pre id="output"></pre>
-<script>
+<script type="module">
     var input = document.getElementById("input");
     var output = document.getElementById("output");
+    var prolongNetworkIdleLoadOutput = document.getElementById("prolongNetworkIdleLoad");
     try {
         var socket = new WebSocket("ws://localhost:8080/ws/echo");
     } catch (error) {
         console.log(error);
     }
+
+    var p2 = prolongNetworkIdleLoad();
+    p2.then(() => {
+        console.log('done p2');
+    })
 
     socket.onopen = function () {
         output.innerHTML += "Status: Connected\n";
@@ -147,10 +176,168 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
         socket.send(input.value);
         input.value = "";
     }
+
+    async function prolongNetworkIdleLoad() {
+        for (var i = 0; i < 40; i++) {
+            await fetch('/ping')
+            .then((data) => {
+                console.log(data);
+            }).catch(() => {
+                console.log('some error');
+            });
+        }
+
+        prolongNetworkIdleLoadOutput.innerText = "for loop complete";
+
+        return
+    }
 </script>
 
 </body>
 </html>`)
+}
+
+func (app *application) embedYoutubeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<html>
+        <head></head>
+        <body>
+            <div id="doneDiv"></div>
+            <iframe src="https://www.youtube.com/embed/gwO7k5RTE54?wmode=opaque&amp;enablejsapi=1" onload='document.getElementById("doneDiv").innerText = "Done!"'></iframe>
+        </body>
+    </html>`)
+}
+
+func (app *application) pingMainHtmlHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<html>
+        <head>
+            <title>Main page</title>
+        </head>
+        <body>
+            <div id="frameType">main</div>
+            <div id="subFrameProlongNetworkIdleLoad">Waiting...</div>
+            <div id="subFrameServerMsg">Waiting...</div>
+            <a href="/ping-main-html" id="homeLink">home</a>
+            <br />
+            <iframe id="subFrame" src="/ping-html"></iframe>
+        </body>
+    </html>`)
+}
+
+func (app *application) pingHtmlHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<html>
+
+<head></head>
+
+<body>
+    <div id="prolongNetworkIdleLoad">Waiting...</div>
+    <div id="serverMsg">Waiting...</div>
+
+    <script>
+        var prolongNetworkIdleLoadOutput = document.getElementById("prolongNetworkIdleLoad");
+        var parentOutput = window.parent.document.getElementById('subFrameProlongNetworkIdleLoad');
+
+        var p = prolongNetworkIdleLoad();
+        p.then(() => {
+            prolongNetworkIdleLoadOutput.innerText += ' - for loop complete';
+            if (parentOutput) {
+                parentOutput.innerText = prolongNetworkIdleLoadOutput.innerText;
+            }
+        })
+
+        async function prolongNetworkIdleLoad() {
+            for (var i = 0; i < 10; i++) {
+                await fetch('/ping')
+                    .then(response => response.text())
+                    .then((data) => {
+                        prolongNetworkIdleLoadOutput.innerText = 'Waiting... ' + data;
+                        if (parentOutput) {
+                            parentOutput.innerText = prolongNetworkIdleLoadOutput.innerText;
+                        }
+                    });
+            }
+        }
+    </script>
+    <script src="/ping.js" async></script>
+</body>
+
+</html>`)
+}
+
+func (app *application) pingJSHandler(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(time.Millisecond * 200)
+	fmt.Fprintf(w, `
+        var serverMsgOutput = document.getElementById("serverMsg");
+        var parentOutputServerMsg = window.parent.document.getElementById('subFrameServerMsg');
+
+        serverMsgOutput.innerText = "ping.js loaded from server";
+        if (parentOutputServerMsg) {
+            parentOutputServerMsg.innerText = 'from subframe: ' + serverMsgOutput.innerText;
+        }
+	`)
+}
+
+func (app *application) textBoxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<!DOCTYPE html>
+    <html>
+        <head>
+        </head>
+        <body>
+            <form action="/dialogbox">
+                <input type="text" name="test"><br><br>
+                <button type="submit" id="nextBtn">Click Me!</button>
+            </form>
+        </body>
+    </html>`)
+}
+
+func (app *application) dialogBoxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<!DOCTYPE html>
+    <html>
+        <head></head>
+        <body>
+            <input type="button" value="home" onclick="myFunction()">
+            <div id='textField'>Hello World</div>
+
+            <script>
+                function myFunction() {
+                    window.location.href = '/';
+                }
+            </script>
+            <script>
+                const queryString = window.location.search;
+                const urlParams = new URLSearchParams(queryString);
+                const dialogType = urlParams.get('dialogType')
+                const div = document.getElementById('textField');
+
+                switch(dialogType) {
+                    case "confirm":
+                        confirm("Click accept");
+                        div.textContent = 'confirm dismissed';
+                        break;
+                    case "prompt":
+                        prompt("Add text and then click accept");
+                        div.textContent = 'prompt dismissed';
+                        break;
+                    case "beforeunload":
+                        window.addEventListener('beforeunload', (event) => {
+                            event.returnValue = "Are you sure you want to leave?";
+                            div.textContent = 'beforeunload dismissed';
+                        });
+                        break;
+                    case "alert":
+                    default:
+                        alert("Click accept");
+                        div.textContent = 'alert dismissed';
+                        break;
+                }
+            </script>
+        </body>
+    </html>`)
 }
 
 func (app *application) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
@@ -195,6 +382,17 @@ func (app *application) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *application) pingHandler(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(time.Millisecond * 50)
+
+	app.counterMu.Lock()
+	app.counter++
+	c := app.counter
+	app.counterMu.Unlock()
+
+	fmt.Fprintf(w, "pong %d", c)
+}
+
 func (app *application) slowHandler(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(time.Millisecond * 200)
 	fmt.Fprintf(w, "Sorry, that was slow")
@@ -223,6 +421,32 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
 
 <head>
     <script>
+    function print(metric) {
+        console.log('name: ' + metric.name)
+        console.log('value: ' + metric.value)
+        console.log('rating: ' + metric.rating)
+        console.log('delta: ' + metric.delta)
+        console.log('num entries: ' + metric.entries.length)
+    }
+
+    async function load() {
+        let {
+            onCLS, onFID, onLCP, onFCP, onINP, onTTFB
+        } = await import('https://unpkg.com/web-vitals@3?module');
+
+        onCLS(print);
+        onFID(print);
+        onLCP(print);
+
+        onFCP(print);
+        onINP(print);
+        onTTFB(print);
+    }
+    load();
+    </script>
+    <script>
+        // window.alert("sometext");
+
         function getCookies() {
             const cDisplay = document.getElementById("cookies-demo");
             cDisplay.textContent = "Cookies: " + document.cookie;
