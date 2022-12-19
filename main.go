@@ -59,7 +59,7 @@ func main() {
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":80",
 		Handler:      mux,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
@@ -67,7 +67,7 @@ func main() {
 	}
 
 	srvS := &http.Server{
-		Addr:         ":8081",
+		Addr:         ":443",
 		Handler:      mux,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
@@ -147,14 +147,20 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
 
 <!-- websockets.html -->
 <input id="input" type="text" />
-<button onclick="send()">Send</button>
+<button id="sendButton">Send</button>
 <pre id="output"></pre>
 <script type="module">
     var input = document.getElementById("input");
     var output = document.getElementById("output");
     var prolongNetworkIdleLoadOutput = document.getElementById("prolongNetworkIdleLoad");
     try {
-        var socket = new WebSocket("ws://localhost:8080/ws/echo");
+        const port = window.location.protocol;
+        const hs = window.location.hostname;
+        if (port == "http:") {
+            var socket = new WebSocket("ws://" + hs + ":80/ws/echo");
+        } else {
+            var socket = new WebSocket("wss://" + hs + ":443/ws/echo");
+        }
     } catch (error) {
         console.log(error);
     }
@@ -171,6 +177,8 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
     socket.onmessage = function (e) {
         output.innerHTML += "Server: " + e.data + "\n";
     };
+
+    document.getElementById("sendButton").addEventListener ("click", send, false);
 
     function send() {
         socket.send(input.value);
