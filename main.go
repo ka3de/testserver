@@ -57,6 +57,7 @@ func main() {
 	mux.HandleFunc("/ping.js", app.pingJSHandler)
 	mux.HandleFunc("/textbox", app.textBoxHandler)
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
+	mux.HandleFunc("/robots.txt", app.robotstxt)
 
 	srv := &http.Server{
 		Addr:         ":80",
@@ -111,104 +112,108 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `
 	<!DOCTYPE html>
 <html>
+
 <head>
+    <meta name="robots" content="noindex, nofollow" />
 </head>
+
 <body>
+    <table>
+        <tr>
+            <td><a href="/csp">/csp</a></td>
+            <td>Test CSP (look in console)</td>
+        </tr>
+        <tr>
+            <td><a href="/other">/other</a></td>
+            <td>Go here for most tests</td>
+        </tr>
+        <tr>
+            <td><a href="/protected">/protected</a></td>
+            <td>Test for basic auth</td>
+        </tr>
+        <tr>
+            <td><a href="/slow">/slow</a></td>
+            <td>You'll get a response back after 200ms</td>
+        </tr>
+        <tr>
+            <td><a href="/dialogbox">/dialog box</a></td>
+            <td>A page with a dialog box</td>
+        </tr>
+    </table>
 
-<table>
-<tr>
-<td><a href="/csp">/csp</a></td>
-<td>Test CSP (look in console)</td>
-</tr>
-<tr>
-<td><a href="/other">/other</a></td>
-<td>Go here for most tests</td>
-</tr>
-<tr>
-<td><a href="/protected">/protected</a></td>
-<td>Test for basic auth</td>
-</tr>
-<tr>
-<td><a href="/slow">/slow</a></td>
-<td>You'll get a response back after 200ms</td>
-</tr>
-<tr>
-<td><a href="/dialogbox">/dialog box</a></td>
-<td>A page with a dialog box</td>
-</tr>
-</table>
+    <br />
+    <div id="prolongNetworkIdleLoad">Waiting...</div>
 
-<br />
-<div id="prolongNetworkIdleLoad">Waiting...</div>
+    <br />
+    <h1>Websocket Test</h1>
+    <img src="/balh.png"></img>
 
-<br />
-<h1>Websocket Test</h1>
-<img src="/balh.png"></img>
-
-<!-- websockets.html -->
-<input id="input" type="text" />
-<button id="sendButton">Send</button>
-<pre id="output"></pre>
-<script type="module">
-    var input = document.getElementById("input");
-    var output = document.getElementById("output");
-    var prolongNetworkIdleLoadOutput = document.getElementById("prolongNetworkIdleLoad");
-    try {
-        const port = window.location.protocol;
-        const hs = window.location.hostname;
-        if (port == "http:") {
-            var socket = new WebSocket("ws://" + hs + ":80/ws/echo");
-        } else {
-            var socket = new WebSocket("wss://" + hs + ":443/ws/echo");
-        }
-    } catch (error) {
-        console.log(error);
-    }
-
-    var p2 = prolongNetworkIdleLoad();
-    p2.then(() => {
-        console.log('done p2');
-    })
-
-    socket.onopen = function () {
-        output.innerHTML += "Status: Connected\n";
-    };
-
-    socket.onmessage = function (e) {
-        output.innerHTML += "Server: " + e.data + "\n";
-    };
-
-    document.getElementById("sendButton").addEventListener ("click", send, false);
-
-    function send() {
-        socket.send(input.value);
-        input.value = "";
-    }
-
-    async function prolongNetworkIdleLoad() {
-        for (var i = 0; i < 40; i++) {
-            await fetch('/ping')
-            .then((data) => {
-                console.log(data);
-            }).catch(() => {
-                console.log('some error');
-            });
+    <!-- websockets.html -->
+    <input id="input" type="text" />
+    <button id="sendButton">Send</button>
+    <pre id="output"></pre>
+    <script type="module">
+        var input = document.getElementById("input");
+        var output = document.getElementById("output");
+        var prolongNetworkIdleLoadOutput = document.getElementById("prolongNetworkIdleLoad");
+        try {
+            const port = window.location.protocol;
+            const hs = window.location.hostname;
+            if (port == "http:") {
+                var socket = new WebSocket("ws://" + hs + ":80/ws/echo");
+            } else {
+                var socket = new WebSocket("wss://" + hs + ":443/ws/echo");
+            }
+        } catch (error) {
+            console.log(error);
         }
 
-        prolongNetworkIdleLoadOutput.innerText = "for loop complete";
+        var p2 = prolongNetworkIdleLoad();
+        p2.then(() => {
+            console.log('done p2');
+        })
 
-        return
-    }
-</script>
+        socket.onopen = function () {
+            output.innerHTML += "Status: Connected\n";
+        };
 
+        socket.onmessage = function (e) {
+            output.innerHTML += "Server: " + e.data + "\n";
+        };
+
+        document.getElementById("sendButton").addEventListener("click", send, false);
+
+        function send() {
+            socket.send(input.value);
+            input.value = "";
+        }
+
+        async function prolongNetworkIdleLoad() {
+            for (var i = 0; i < 40; i++) {
+                await fetch('/ping')
+                    .then((data) => {
+                        console.log(data);
+                    }).catch(() => {
+                        console.log('some error');
+                    });
+            }
+
+            prolongNetworkIdleLoadOutput.innerText = "for loop complete";
+
+            return
+        }
+    </script>
 </body>
+
 </html>`)
 }
 
 func (app *application) embedYoutubeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `
 	<html>
-        <head></head>
+        <head>
+            <meta name="robots" content="noindex, nofollow" />
+        </head>
         <body>
             <div id="doneDiv"></div>
             <iframe src="https://www.youtube.com/embed/gwO7k5RTE54?wmode=opaque&amp;enablejsapi=1" onload='document.getElementById("doneDiv").innerText = "Done!"'></iframe>
@@ -221,6 +226,7 @@ func (app *application) pingMainHtmlHandler(w http.ResponseWriter, r *http.Reque
 	<html>
         <head>
             <title>Main page</title>
+            <meta name="robots" content="noindex, nofollow" />
         </head>
         <body>
             <div id="frameType">main</div>
@@ -237,7 +243,9 @@ func (app *application) pingHtmlHandler(w http.ResponseWriter, r *http.Request) 
 	fmt.Fprintf(w, `
 	<html>
 
-<head></head>
+<head>
+    <meta name="robots" content="noindex, nofollow" />
+</head>
 
 <body>
     <div id="prolongNetworkIdleLoad">Waiting...</div>
@@ -292,6 +300,7 @@ func (app *application) textBoxHandler(w http.ResponseWriter, r *http.Request) {
 	<!DOCTYPE html>
     <html>
         <head>
+            <meta name="robots" content="noindex, nofollow" />
         </head>
         <body>
             <form action="/dialogbox">
@@ -306,7 +315,9 @@ func (app *application) dialogBoxHandler(w http.ResponseWriter, r *http.Request)
 	fmt.Fprintf(w, `
 	<!DOCTYPE html>
     <html>
-        <head></head>
+        <head>
+            <meta name="robots" content="noindex, nofollow" />
+        </head>
         <body>
             <input type="button" value="home" onclick="myFunction()">
             <div id='textField'>Hello World</div>
@@ -346,6 +357,11 @@ func (app *application) dialogBoxHandler(w http.ResponseWriter, r *http.Request)
             </script>
         </body>
     </html>`)
+}
+
+func (app *application) robotstxt(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `User-agent: *
+Disallow: /`)
 }
 
 func (app *application) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
@@ -428,6 +444,7 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
 <html>
 
 <head>
+    <meta name="robots" content="noindex, nofollow" />
     <script>
     function print(metric) {
         console.log('name: ' + metric.name)
