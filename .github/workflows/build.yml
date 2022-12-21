@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.6.0
+    - name: Install Go
+      uses: actions/setup-go@v3
     - name: ARM runner
       uses: pguyot/arm-runner-action@v2.5.2
       with:
@@ -19,19 +21,7 @@ jobs:
         cpu: cortex-a7
         copy_artifact_path: dist/ # Copies dist/ to outside of the image
         commands: |
-            set -x 
-            # Install Go
-            export GOLANG="$(curl -s https://go.dev/dl/ | awk -F[\>\<] '/linux-arm64/ && !/beta/ {print $5;exit}')"
-            wget https://golang.org/dl/$GOLANG
-            mkdir /gobin
-            sudo tar -C /gobin -xzf $GOLANG
-            rm $GOLANG
-            unset GOLANG
-
-            CURRENT=`pwd`
-            echo "PATH=$PATH:$CURRENT/gobin/go/bin" >> ~/.profile
-            echo "GOPATH=$HOME/go" >> ~/.profile
-
+            set -x
             # Build binary
             go build -o server main.go
 
