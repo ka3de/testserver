@@ -28,8 +28,9 @@ jobs:
             rm $GOLANG
             unset GOLANG
 
-            echo "PATH=$PATH:/usr/local/go/bin" >> ~/.profile
-            echo "GOPATH=$HOME/go" >> ~/.profile
+            echo "PATH=$PATH:/usr/local/go/bin" >> .profile
+            echo "GOPATH=$HOME/go" >> .profile
+            source .profile
 
             # Build binary
             go build -o server main.go
