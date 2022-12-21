@@ -32,7 +32,7 @@ jobs:
             export GOPATH=$HOME/go
 
             # Build binary
-            go build -o server main.go
+            go build -o server -ldflags='-w -s' main.go
 
             # Place binary in dist/ folder
             mkdir dist
@@ -40,6 +40,6 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: binaries
+        name: server_binary
         path: dist/
         retention-days: 7
