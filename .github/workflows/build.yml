@@ -10,8 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v2.6.0
     - name: ARM runner
       uses: pguyot/arm-runner-action@v2.5.2
       with:
@@ -36,10 +36,10 @@ jobs:
             # Place binary in dist/ folder
             mkdir dist
             mv server dist/
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: binaries
-          path: dist/
-          retention-days: 7
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: binaries
+        path: dist/
+        retention-days: 7
             
