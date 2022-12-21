@@ -23,12 +23,13 @@ jobs:
             # Install Go
             export GOLANG="$(curl -s https://go.dev/dl/ | awk -F[\>\<] '/linux-arm64/ && !/beta/ {print $5;exit}')"
             wget https://golang.org/dl/$GOLANG
-            mkdir ~/gobin
-            sudo tar -C ~/gobin -xzf $GOLANG
+            mkdir /gobin
+            sudo tar -C /gobin -xzf $GOLANG
             rm $GOLANG
             unset GOLANG
 
-            echo "PATH=$PATH:~/gobin/go/bin" >> ~/.profile
+            CURRENT=`pwd`
+            echo "PATH=$PATH:$CURRENT/gobin/go/bin" >> ~/.profile
             echo "GOPATH=$HOME/go" >> ~/.profile
 
             # Build binary
