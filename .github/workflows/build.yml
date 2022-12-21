@@ -1,0 +1,43 @@
+name: Build
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: pguyot/arm-runner-action@v2
+      with:
+        base_image: raspios_lite_arm64:latest
+        cpu: cortex-a7
+        copy_artifact_path: dist/ # Copies dist/ to outside of the image
+        commands: |
+            set -x 
+            # Install Go
+            export GOLANG="$(curl -s https://go.dev/dl/ | awk -F[\>\<] '/linux-arm64/ && !/beta/ {print $5;exit}')"
+            wget https://golang.org/dl/$GOLANG
+            sudo tar -C /usr/local -xzf $GOLANG
+            rm $GOLANG
+            unset GOLANG
+
+            echo "PATH=$PATH:/usr/local/go/bin" >> ~/.profile
+            echo "GOPATH=$HOME/go" >> ~/.profile
+
+            # Build binary
+            go build -o server main.go
+
+            # Place binary in dist/ folder
+            mkdir dist
+            mv server dist/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: dist/
+          retention-days: 7
+            
