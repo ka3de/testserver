@@ -17,7 +17,7 @@ jobs:
       with:
         base_image: raspios_lite_arm64:latest
         cpu: cortex-a7
-        image_additional_mb: 2048
+        image_additional_mb: 512
         copy_artifact_path: dist/ # Copies dist/ to outside of the image
         commands: |
             set -x 
