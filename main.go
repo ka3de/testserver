@@ -120,33 +120,33 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
 <body>
     <table>
         <tr>
-            <td><a href="/csp">/csp</a></td>
-            <td><a href="/csp" target="_blank">/csp</a> (new tab)</td>
+            <td><a id="csp" href="/csp">/csp</a></td>
+            <td><a id="csp_np" href="/csp" target="_blank">/csp</a> (new tab)</td>
             <td>Test CSP (look in console)</td>
         </tr>
         <tr>
-            <td><a href="/other">/other</a></td>
-            <td><a href="/other" target="_blank">/other</a> (new tab)</td>
+            <td><a id="other" href="/other">/other</a></td>
+            <td><a id="other_np" href="/other" target="_blank">/other</a> (new tab)</td>
             <td>Go here for most tests</td>
         </tr>
         <tr>
-            <td><a href="/protected">/protected</a></td>
-            <td><a href="/protected" target="_blank">/protected</a> (new tab)</td>
+            <td><a id="protected" href="/protected">/protected</a></td>
+            <td><a id="protected_np" href="/protected" target="_blank">/protected</a> (new tab)</td>
             <td>Test for basic auth</td>
         </tr>
         <tr>
-            <td><a href="/slow">/slow</a></td>
-            <td><a href="/slow" target="_blank">/slow</a> (new tab)</td>
+            <td><a id="slow" href="/slow">/slow</a></td>
+            <td><a id="slow_np" href="/slow" target="_blank">/slow</a> (new tab)</td>
             <td>You'll get a response back after 200ms</td>
         </tr>
         <tr>
-            <td><a href="/dialogbox">/dialogbox</a></td>
-            <td><a href="/dialogbox" target="_blank">/dialogbox</a> (new tab)</td>
+            <td><a id="dialogbox" href="/dialogbox">/dialogbox</a></td>
+            <td><a id="dialogbox_np" href="/dialogbox" target="_blank">/dialogbox</a> (new tab)</td>
             <td>A page with a dialog box</td>
         </tr>
         <tr>
-            <td><a href="/embed-youtube">/embed-youtube</a></td>
-            <td><a href="/embed-youtube" target="_blank">/embed-youtube</a> (new tab)</td>
+            <td><a id="embed_youtube_np" href="/embed-youtube">/embed-youtube</a></td>
+            <td><a id="embed_youtube_np" href="/embed-youtube" target="_blank">/embed-youtube</a> (new tab)</td>
             <td>A page with a embedded Youtube video</td>
         </tr>
     </table>
