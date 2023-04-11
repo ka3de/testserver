@@ -570,6 +570,21 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
             }
             sDisplay.textContent = opts;
         }
+
+        function attachDetach() {
+            const btn = document.getElementById("attach-detach-button");
+            if (btn.innerText == "Detach") {
+                document.getElementById("attach-detach").remove();
+                btn.innerText = "Attach";
+                return;
+            }
+
+            btn.innerText = "Detach";
+            let p = document.createElement("p");
+            p.id = "attach-detach";
+            p.innerText = "attached";
+            document.getElementById("attach-detach-cell").append(p)
+        }
     </script>
 </head>
 
@@ -578,6 +593,12 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
     <p><a href="/">&lt; Back</a></p>
 
     <table>
+        <tr>
+            <td><button type="button" id="attach-detach-button" onclick="attachDetach()">Detach</button></td>
+            <td id="attach-detach-cell">
+                <p id="attach-detach">attached</p>
+            </td>
+        </tr>
         <tr>
             <td><button type="button" onclick="getGeolocation()">Get geolocation</button></td>
             <td>
