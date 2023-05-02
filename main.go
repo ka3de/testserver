@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -57,6 +58,7 @@ func main() {
 	mux.HandleFunc("/ping.js", app.pingJSHandler)
 	mux.HandleFunc("/textbox", app.textBoxHandler)
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
+	mux.HandleFunc("/sleep", app.sleepHandler)
 	mux.HandleFunc("/robots.txt", app.robotstxt)
 
 	srv := &http.Server{
@@ -702,6 +704,28 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
 </body>
 
 </html>`)
+}
+
+func (app *application) sleepHandler(w http.ResponseWriter, r *http.Request) {
+	sleep := 30
+	if t, err := strconv.Atoi(r.URL.Query().Get("t")); err == nil {
+		sleep = t
+	}
+
+	log.Printf("sleeping: %d", sleep)
+
+	time.Sleep(time.Duration(sleep) * time.Second)
+
+	fmt.Fprintf(w, `
+	<!DOCTYPE html>
+    <html>
+        <head>
+            <meta name="robots" content="noindex, nofollow" />
+        </head>
+        <body>
+            <div id='textField'>Request was forced to sleep %d seconds</div>
+        </body>
+    </html>`, sleep)
 }
 
 func (app *application) basicAuth(next http.HandlerFunc) http.HandlerFunc {
