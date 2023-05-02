@@ -707,9 +707,10 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) sleepHandler(w http.ResponseWriter, r *http.Request) {
-	sleep := 30
-	if t, err := strconv.Atoi(r.URL.Query().Get("t")); err == nil {
-		sleep = t
+	sleep, err := strconv.Atoi(r.URL.Query().Get("t"))
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
 	}
 
 	log.Printf("sleeping: %d", sleep)
