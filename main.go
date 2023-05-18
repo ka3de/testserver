@@ -594,15 +594,17 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
 
     <p><a href="/">&lt; Back</a></p>
 
+    <h1>This is a heading</h1>
+
     <table>
         <tr>
-            <td><button type="button" id="attach-detach-button" onclick="attachDetach()">Detach</button></td>
+            <td><button data-test-id="btn-Cashout" type="button" id="attach-detach-button" onclick="attachDetach()">Detach</button></td>
             <td id="attach-detach-cell">
                 <p id="attach-detach">attached</p>
             </td>
         </tr>
         <tr>
-            <td><button type="button" onclick="getGeolocation()">Get geolocation</button></td>
+            <td><button data-test-id="btn-Cashout" type="button" onclick="getGeolocation()">Get geolocation</button></td>
             <td>
                 <p id="geolocation-demo">Lat: ? Long: ?</p>
             </td>
@@ -614,7 +616,7 @@ func (app *application) otherHandler(w http.ResponseWriter, r *http.Request) {
             </td>
         </tr>
         <tr>
-            <td><button type="button" onclick="networkStatus()">Refresh network status</button></td>
+            <td><button data-test-id="btn-Cashout" type="button" onclick="networkStatus()">Refresh network status</button></td>
             <td>
                 <p id="network-demo">Network Status: ?</p>
             </td>
