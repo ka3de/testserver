@@ -62,7 +62,7 @@ func main() {
 	mux.HandleFunc("/robots.txt", app.robotstxt)
 
 	srv := &http.Server{
-		Addr:         ":80",
+		Addr:         ":81",
 		Handler:      mux,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
@@ -70,7 +70,7 @@ func main() {
 	}
 
 	srvS := &http.Server{
-		Addr:         ":443",
+		Addr:         ":444",
 		Handler:      mux,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
