@@ -60,6 +60,8 @@ func main() {
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
 	mux.HandleFunc("/sleep", app.sleepHandler)
 	mux.HandleFunc("/robots.txt", app.robotstxt)
+	mux.HandleFunc("/iframeHome", app.iframeHome)
+	mux.HandleFunc("/iframeSignIn", app.iframeSignIn)
 
 	srv := &http.Server{
 		Addr:         ":81",
@@ -150,6 +152,11 @@ func (app *application) indexHandler(w http.ResponseWriter, r *http.Request) {
             <td><a id="embed_youtube_np" href="/embed-youtube">/embed-youtube</a></td>
             <td><a id="embed_youtube_np" href="/embed-youtube" target="_blank">/embed-youtube</a> (new tab)</td>
             <td>A page with a embedded Youtube video</td>
+        </tr>
+        <tr>
+            <td><a id="iframe_home" href="/iframeHome">/iframeHome</a></td>
+            <td><a id="iframe_home_np" href="/iframeHome" target="_blank">/iframeHome</a> (new tab)</td>
+            <td>A page with an iframe which leads to another page with an iframe</td>
         </tr>
     </table>
 
@@ -752,4 +759,31 @@ func (app *application) basicAuth(next http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
+}
+
+func (app *application) iframeHome(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta name="robots" content="noindex, nofollow" />
+        </head>
+        <body>
+            <a href="/iframeSignIn">Sign In</a>
+            <iframe src="about:blank"></iframe>
+        </body>
+    </html>`)
+}
+
+func (app *application) iframeSignIn(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+	<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta name="robots" content="noindex, nofollow" />
+        </head>
+        <body>
+            <iframe src="about:blank"></iframe>
+        </body>
+    </html>`)
 }
