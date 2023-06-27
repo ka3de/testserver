@@ -57,6 +57,8 @@ func main() {
 	mux.HandleFunc("/ping.js", app.pingJSHandler)
 	mux.HandleFunc("/textbox", app.textBoxHandler)
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
+	mux.HandleFunc("/slow-show-link.html", app.slowShowLinkHandler)
+	mux.HandleFunc("/slow-show.html", app.slowShowHandler)
 	mux.HandleFunc("/robots.txt", app.robotstxt)
 
 	srv := &http.Server{
@@ -367,6 +369,46 @@ func (app *application) dialogBoxHandler(w http.ResponseWriter, r *http.Request)
             </script>
         </body>
     </html>`)
+}
+
+func (app *application) slowShowLinkHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+    <html>
+    <head>
+    </head>
+    <body>
+        <a id='link0' href="/slow-show.html">Slow-Show</a>
+    </body>
+    </html>
+`)
+}
+
+func (app *application) slowShowHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `
+    <html>
+    <head>
+    <script>
+        setTimeout( function() {
+            const link1 = document.getElementById('link1');
+            link1.hidden = false;
+        }, 1000);
+        setTimeout( function() {
+            const link2 = document.getElementById('link2');
+            link2.hidden = false;
+        }, 2000);
+        setTimeout( function() {
+            const link3 = document.getElementById('link3');
+            link3.hidden = false;
+        }, 3000);
+    </script>
+    </head>
+    <body>
+        <a id="link1" href="/" hidden>Link1</a>
+        <a id="link2" href="/" hidden>Link2</a>
+        <a id="link3" href="/" hidden>Link3</a>
+    </body>
+    </html>
+`)
 }
 
 func (app *application) robotstxt(w http.ResponseWriter, r *http.Request) {
