@@ -59,6 +59,7 @@ func main() {
 	mux.HandleFunc("/textbox", app.textBoxHandler)
 	mux.HandleFunc("/dialogbox", app.dialogBoxHandler)
 	mux.HandleFunc("/sleep", app.sleepHandler)
+	mux.HandleFunc("/httpstatus", app.httpStatusHandler)
 	mux.HandleFunc("/robots.txt", app.robotstxt)
 	mux.HandleFunc("/iframeHome", app.iframeHome)
 	mux.HandleFunc("/iframeSignIn", app.iframeSignIn)
@@ -376,6 +377,17 @@ func (app *application) dialogBoxHandler(w http.ResponseWriter, r *http.Request)
             </script>
         </body>
     </html>`)
+}
+
+func (app *application) httpStatusHandler(w http.ResponseWriter, r *http.Request) {
+	code, err := strconv.ParseInt(r.URL.Query().Get("code"), 10, 64)
+	if err != nil || http.StatusText(int(code)) == "" {
+		// If code query param can not be parsed as integer
+		// or it is not a valid HTTP status code, return 200
+		return
+	}
+
+	w.WriteHeader(int(code))
 }
 
 func (app *application) robotstxt(w http.ResponseWriter, r *http.Request) {
